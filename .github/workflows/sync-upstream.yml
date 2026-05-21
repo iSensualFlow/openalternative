@@ -1,46 +1,57 @@
 name: Automatic Repository Sync
 
-# Trigger conditions: run on push to main branch, or manual trigger
+# 触发条件：每天凌晨自动同步，或者你随时手动点击触发
 on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch: # Allow manual execution
+  schedule:
+    - cron: '0 0 * * *' # 国际标准时间 0:00（北京时间早上 8:00）自动运行
+  workflow_dispatch: # 允许你在 GitHub 页面上手动点击 "Run workflow" 触发
 
-# Set permissions for GITHUB_TOKEN (Only affects current source repo)
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true" # 消除 Node.js 20 警告
+
+# 关键：赋予本地 GITHUB_TOKEN 对你当前仓库的写权限
 permissions:
   contents: write
-  pull-requests: read
 
 jobs:
-  sync-repository:
-    name: Sync Code to Target Repository
+  sync-upstream:
+    name: Sync from Original Repository
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Check out the source repository code
-      - name: Checkout Source Code
+      # Step 1: 检出你自己的仓库代码
+      - name: Checkout Your Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for complete sync
-          persist-credentials: false # 【重要】防止源仓库的凭证干扰目标仓库的推送
+          fetch-depth: 0 # 获取完整历史记录，防止合并时冲突
 
-      # Step 2: Set up Git configuration
+      # Step 2: 配置 Git 身份信息
       - name: Configure Git Identity
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-      # Step 3 & 4 合并：动态带上 Token 认证并推送到目标仓库
-      - name: Push Code to Target Repository
-        env:
-          TARGET_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
-          TARGET_URL: ${{ secrets.TARGET_REPO_URL }} # 格式如: github.com/user/target-repo.git
+      # Step 3: 添加原作者仓库作为上游，拉取并合并，最后推送到你自己的仓库
+      - name: Fetch and Sync from Upstream
         run: |
-          # 将 Token 嵌入 HTTPS 链接中实现免密鉴权
-          git push --force "https://${TARGET_TOKEN}@${TARGET_URL}" main
-          echo "Code synced to target repository successfully"
+          # 1. 将原作者仓库添加为 upstream
+          git remote add upstream https://github.com/piotrkulpinski/openalternative.git
+          
+          # 2. 拉取原作者的所有分支和更新
+          git fetch upstream main
+          
+          # 3. 切换到你自己的 main 分支（以防万一）
+          git checkout main
+          
+          # 4. 将原作者的 main 分支合并到你的本地 main 分支
+          # 注：这里采用 merge 保持提交记录。如果你想要强行完全一致，可以使用 git reset --hard upstream/main
+          git merge upstream/main --allow-unrelated-histories -m "chore: sync with upstream original repository"
+          
+          # 5. 推送回你自己的远程仓库
+          git push origin main
+          echo "Successfully synced with piotrkulpinski/openalternative"
 
-      # Step 5: Handle sync failure
+      # Step 4: 失败时通知
       - name: Sync Failure Notification
         if: failure()
         run: |
-          echo "Error: Repository sync failed! Please check the logs for details."
+          echo "Error: Repository sync failed! There might be merge conflicts or permission issues."
