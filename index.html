@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -40,7 +40,6 @@
             padding: 20px;
         }
 
-        /* Loading Animation */
         .loading {
             text-align: center;
             padding: 50px;
@@ -61,7 +60,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Hero Section */
         .hero {
             text-align: center;
             padding: 80px 20px;
@@ -86,7 +84,6 @@
             margin-bottom: 30px;
         }
 
-        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -121,7 +118,6 @@
             margin-top: 8px;
         }
 
-        /* Note Banner */
         .note-banner {
             background: rgba(210, 153, 34, 0.1);
             border-left: 4px solid var(--warning);
@@ -130,7 +126,6 @@
             margin: 24px 0;
         }
 
-        /* Sponsors */
         .sponsors {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
@@ -159,7 +154,6 @@
             filter: brightness(1);
         }
 
-        /* Navigation */
         .nav-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -185,7 +179,6 @@
             color: var(--accent);
         }
 
-        /* Categories */
         .category {
             margin: 50px 0;
         }
@@ -217,7 +210,6 @@
             color: var(--text-primary);
         }
 
-        /* Cards Grid */
         .projects-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -278,7 +270,6 @@
             color: var(--warning);
         }
 
-        /* Search Box */
         .search-box {
             margin: 20px 0;
         }
@@ -298,7 +289,6 @@
             border-color: var(--accent);
         }
 
-        /* Button */
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -328,7 +318,6 @@
             color: white;
         }
 
-        /* Footer */
         .footer {
             text-align: center;
             padding: 40px;
@@ -342,7 +331,6 @@
             text-decoration: none;
         }
 
-        /* Scroll to top */
         .scroll-top {
             position: fixed;
             bottom: 30px;
@@ -370,7 +358,6 @@
             border-color: var(--accent);
         }
 
-        /* Error message */
         .error-message {
             text-align: center;
             padding: 50px;
@@ -397,10 +384,8 @@
     </div>
 
     <script>
-        // Parse README.md and render HTML
         async function loadAndRender() {
             try {
-                // Fetch README.md from the same directory (root)
                 const response = await fetch('README.md');
                 
                 if (!response.ok) {
@@ -408,14 +393,9 @@
                 }
                 
                 const markdown = await response.text();
-                
-                // Parse markdown and render
                 const html = parseMarkdownToHTML(markdown);
-                
-                // Replace loading with content
                 document.querySelector('.container').innerHTML = html;
                 
-                // Setup interactive features
                 setupSearch();
                 setupScrollTop();
                 setupNavigation();
@@ -425,12 +405,12 @@
                 console.error('Error loading README:', error);
                 document.querySelector('.container').innerHTML = `
                     <div class="hero">
-                        <h1>✨ Error Loading Content</h1>
+                        <h1>Error Loading Content</h1>
                         <div class="error-message">
                             <p>Unable to load README.md file.</p>
                             <p style="font-size: 0.9rem; margin-top: 20px;">Make sure the file exists in the repository root.</p>
                             <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 20px;">
-                                🔄 Retry
+                                Retry
                             </button>
                         </div>
                     </div>
@@ -438,60 +418,56 @@
             }
         }
         
-        // Parse markdown to HTML structure
         function parseMarkdownToHTML(markdown) {
             let html = '';
             
-            // Extract title from markdown
             const titleMatch = markdown.match(/# (.*?)(?:\n|$)/);
-            const title = titleMatch ? titleMatch[1] : 'Awesome Open Source Alternatives';
+            let title = titleMatch ? titleMatch[1] : 'Awesome Open Source Alternatives';
+            title = title.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+            title = title.replace(/!\[[^\]]*\]\([^)]+\)/g, '');
+            title = title.replace(/\*\*|__/g, '');
+            title = title.replace(/\s+/g, ' ').trim();
             
-            // Extract description (first paragraph after title)
             const lines = markdown.split('\n');
             let description = 'Curated list of open source alternatives to proprietary software';
             for (let i = 0; i < Math.min(20, lines.length); i++) {
-                if (lines[i].trim() && !lines[i].startsWith('#') && !lines[i].startsWith('[')) {
+                if (lines[i].trim() && !lines[i].startsWith('#') && !lines[i].startsWith('[') && !lines[i].startsWith('![')) {
                     description = lines[i].trim().substring(0, 200);
                     break;
                 }
             }
             
-            // Build Hero
             html = `
-                <!-- Hero Section -->
                 <div class="hero">
-                    <h1>✨ ${title.replace('# ', '')} ✨</h1>
+                    <h1>✨ ${title} ✨</h1>
                     <div class="hero-subtitle">
-                        ${description}
+                        ${escapeHtml(description)}
                     </div>
                     <div>
                         <button class="btn btn-primary" onclick="window.open('https://github.com/piotrkulpinski/openalternative', '_blank')">
-                            ⭐ Star on GitHub
+                            Star on GitHub
                         </button>
                         <button class="btn" onclick="window.open('https://openalternative.co/submit', '_blank')" style="margin-left: 12px;">
-                            🤝 Submit a Project
+                            Submit a Project
                         </button>
                     </div>
                 </div>
             `;
             
-            // Extract Note
             const noteMatch = markdown.match(/\*\*Note:\*\* (.*?)(?:\n\n|$)/s);
             if (noteMatch) {
                 html += `
                     <div class="note-banner">
-                        <strong>📌 Note:</strong> ${noteMatch[1].replace(/\n/g, ' ')}
+                        <strong>Note:</strong> ${escapeHtml(noteMatch[1].replace(/\n/g, ' '))}
                     </div>
                 `;
             }
             
-            // Extract Sponsors section
             const sponsorSection = extractSponsors(markdown);
             if (sponsorSection) {
                 html += sponsorSection;
             }
             
-            // Extract Stats
             const statsMatch = markdown.match(/\*\*Total Projects:\*\* (\d+).*?\*\*Categories:\*\* (\d+).*?\*\*Total Stars:\*\* ([\dM]+)/s);
             if (statsMatch) {
                 html += `
@@ -516,28 +492,24 @@
                 `;
             }
             
-            // Add Search Box
             html += `
                 <div class="search-box">
-                    <input type="text" class="search-input" id="search-input" placeholder="🔍 Search projects by name, description, or license...">
+                    <input type="text" class="search-input" id="search-input" placeholder="Search projects by name, description, or license...">
                 </div>
             `;
             
-            // Extract Categories and Projects
             const categories = extractCategoriesFromMarkdown(markdown);
             
-            // Build Navigation
             if (categories.length > 0) {
                 html += `
                     <div class="nav-grid" id="nav-grid">
                         ${categories.map(cat => `
-                            <a class="nav-item" onclick="scrollToCategory('${cat.id}')">${cat.icon || '📁'} ${cat.name}</a>
+                            <a class="nav-item" onclick="scrollToCategory('${cat.id}')">${cat.icon || '📁'} ${escapeHtml(cat.name)}</a>
                         `).join('')}
                     </div>
                 `;
             }
             
-            // Build Content
             html += `<div id="content">`;
             
             for (const category of categories) {
@@ -547,7 +519,7 @@
                     <div class="category" id="category-${category.id}">
                         <div class="category-header" onclick="toggleCategory('${category.id}')">
                             <span>${category.icon || '📁'}</span>
-                            <span>${category.name}</span>
+                            <span>${escapeHtml(category.name)}</span>
                             <span style="font-size: 0.8rem; margin-left: auto;">▼</span>
                         </div>
                 `;
@@ -557,7 +529,7 @@
                     
                     html += `
                         <div class="subcategory" data-category="${category.id}">
-                            <div class="subcategory-header">${subcategory.name}</div>
+                            <div class="subcategory-header">${escapeHtml(subcategory.name)}</div>
                             <div class="projects-grid" data-subcategory="${subcategory.name.replace(/[^a-zA-Z0-9]/g, '-')}">
                     `;
                     
@@ -584,23 +556,21 @@
             
             html += `</div>`;
             
-            // Add Contributing Section
             html += `
                 <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 40px; text-align: center; margin: 40px 0;">
-                    <h3 style="margin-bottom: 16px;">🤝 Want to contribute?</h3>
+                    <h3 style="margin-bottom: 16px;">Want to contribute?</h3>
                     <p style="color: var(--text-secondary); margin-bottom: 24px;">
                         Submit your project on OpenAlternative and it will automatically appear here once approved.
                     </p>
                     <button class="btn btn-primary" onclick="window.open('https://openalternative.co/submit', '_blank')">
-                        Submit a Project →
+                        Submit a Project
                     </button>
                 </div>
             `;
             
-            // Footer
             html += `
                 <div class="footer">
-                    <p>❤️ Maintained by <a href="https://openalternative.co">OpenAlternative</a></p>
+                    <p>Maintained by <a href="https://openalternative.co">OpenAlternative</a></p>
                     <p style="margin-top: 12px;">
                         <a href="https://github.com/piotrkulpinski/openalternative">GitHub</a> · 
                         <a href="https://twitter.com/openalternative">Twitter</a> · 
@@ -610,13 +580,11 @@
                 </div>
             `;
             
-            // Add scroll to top button
             html += `<div class="scroll-top" id="scroll-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</div>`;
             
             return html;
         }
         
-        // Extract sponsors from markdown
         function extractSponsors(markdown) {
             const sponsorMatch = markdown.match(/## Sponsors\n(.*?)(?=\n## |\n---|\n$)/s);
             if (!sponsorMatch) return null;
@@ -626,7 +594,7 @@
             
             return `
                 <div class="sponsors">
-                    <h2>💎 Sponsors</h2>
+                    <h2>Sponsors</h2>
                     <div class="sponsors-grid">
                         ${imgMatches.map(img => `
                             <div class="sponsor-item">
@@ -639,7 +607,6 @@
             `;
         }
         
-        // Extract categories and projects from markdown
         function extractCategoriesFromMarkdown(markdown) {
             const categories = [];
             const lines = markdown.split('\n');
@@ -650,14 +617,12 @@
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
                 
-                // Match main category (## Category Name)
                 if (line.startsWith('## ') && !line.startsWith('###')) {
                     if (currentCategory && currentCategory.subcategories.length > 0) {
                         categories.push(currentCategory);
                     }
                     
                     const categoryName = line.replace('## ', '');
-                    // Skip non-category sections
                     if (categoryName === 'Sponsors' || categoryName === 'Contents' || 
                         categoryName === 'Contributing' || categoryName === 'Footnotes') {
                         currentCategory = null;
@@ -671,7 +636,6 @@
                         subcategories: []
                     };
                 }
-                // Match subcategory (### Subcategory Name)
                 else if (line.startsWith('### ') && currentCategory) {
                     const subcategoryName = line.replace('### ', '');
                     currentSubcategory = {
@@ -680,16 +644,12 @@
                     };
                     currentCategory.subcategories.push(currentSubcategory);
                 }
-                // Match project lines (starting with - [ or | Project)
                 else if (currentSubcategory && (line.startsWith('- [') || (line.startsWith('|') && line.includes('](http')))) {
-                    // Parse project from markdown table row or list item
                     let projectMatch = null;
                     
-                    // Try list format: - [Name](url) - Description `License` ⭐ stars
                     if (line.startsWith('- [')) {
                         projectMatch = line.match(/-\s*\[(.*?)\]\((.*?)\)\s*-\s*(.*?)(?:\s+`(.*?)`\s+[⭐*]*\s*([\d.KM]+))?/);
                     }
-                    // Try table format: | [Name](url) | Description | License | ⭐ stars |
                     else if (line.startsWith('|')) {
                         const parts = line.split('|').map(p => p.trim());
                         if (parts.length >= 4) {
@@ -719,7 +679,6 @@
             return categories;
         }
         
-        // Get icon for category
         function getCategoryIcon(categoryName) {
             const icons = {
                 'AI & Machine Learning': '🤖',
@@ -736,14 +695,12 @@
             return icons[categoryName] || '📁';
         }
         
-        // Escape HTML special characters
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
         
-        // Search functionality
         function setupSearch() {
             const searchInput = document.getElementById('search-input');
             if (!searchInput) return;
@@ -766,7 +723,6 @@
                     }
                 });
                 
-                // Show/hide subcategories with no visible projects
                 const subcategories = document.querySelectorAll('.subcategory');
                 subcategories.forEach(sub => {
                     const visibleProjects = sub.querySelectorAll('.project-card[style="display: block"]').length;
@@ -775,7 +731,6 @@
             });
         }
         
-        // Scroll to category
         window.scrollToCategory = function(categoryId) {
             const element = document.getElementById(`category-${categoryId}`);
             if (element) {
@@ -783,7 +738,6 @@
             }
         };
         
-        // Toggle category visibility
         window.toggleCategory = function(categoryId) {
             const category = document.getElementById(`category-${categoryId}`);
             const subcategories = category.querySelectorAll('.subcategory');
@@ -803,16 +757,13 @@
             }
         };
         
-        // Setup navigation
         function setupNavigation() {
-            // Initially hide arrows rotation
             const arrows = document.querySelectorAll('.category-header span:last-child');
             arrows.forEach(arrow => {
                 arrow.style.display = 'inline-block';
             });
         }
         
-        // Scroll to top button
         function setupScrollTop() {
             const btn = document.getElementById('scroll-top');
             if (!btn) return;
@@ -826,7 +777,6 @@
             });
         }
         
-        // Update last updated
         function updateLastUpdated() {
             const lastUpdatedElem = document.getElementById('lastUpdated');
             const updateTimeElem = document.getElementById('updateTime');
@@ -840,7 +790,6 @@
             }
         }
         
-        // Initialize
         loadAndRender();
     </script>
 </body>
