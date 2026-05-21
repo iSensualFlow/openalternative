@@ -464,10 +464,7 @@
                 `;
             }
             
-            const sponsorSection = extractSponsors(markdown);
-            if (sponsorSection) {
-                html += sponsorSection;
-            }
+      
             
             const statsMatch = markdown.match(/\*\*Total Projects:\*\* (\d+).*?\*\*Categories:\*\* (\d+).*?\*\*Total Stars:\*\* ([\dM]+)/s);
             if (statsMatch) {
