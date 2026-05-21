@@ -50,8 +50,78 @@ jobs:
           git push origin main
           echo "Successfully synced with piotrkulpinski/openalternative"
 
-      # Step 4: Notification on failure
+      # Step 4: Setup GitHub Pages environment and ensure README.md accessibility
+      - name: Setup GitHub Pages Environment
+        run: |
+          echo "Setting up GitHub Pages environment..."
+          
+          # Create docs directory if it doesn't exist
+          mkdir -p docs
+          
+          # Create symbolic link to README.md in docs directory
+          # This allows the HTML page to access README.md from the same directory level
+          if [ ! -f "docs/README.md" ]; then
+            ln -sf ../README.md docs/README.md
+            echo "Created symbolic link: docs/README.md -> ../README.md"
+          fi
+          
+          # Create .nojekyll file to disable Jekyll processing
+          # This ensures GitHub Pages serves files as-is without Jekyll transformation
+          touch docs/.nojekyll
+          echo "Created docs/.nojekyll file"
+          
+          # Create _config.yml for GitHub Pages if it doesn't exist
+          if [ ! -f "_config.yml" ]; then
+            cat > _config.yml << 'EOF'
+# GitHub Pages configuration
+title: Awesome Open Source Alternatives
+description: Curated list of open source alternatives to proprietary software
+
+# Include README.md for access by HTML pages
+include:
+  - README.md
+
+# Exclude unnecessary files
+exclude:
+  - .github/
+  - node_modules/
+
+# Custom 404 page
+permalink: pretty
+EOF
+            echo "Created _config.yml file"
+          fi
+          
+          echo "GitHub Pages environment setup complete"
+
+      # Step 5: Check if HTML file exists and create if missing
+      - name: Ensure HTML File Exists
+        run: |
+          if [ ! -f "docs/index.html" ]; then
+            echo "Warning: docs/index.html not found. Please create it for GitHub Pages."
+            echo "You can create a basic index.html or use the dark theme template."
+          else
+            echo "docs/index.html found"
+          fi
+
+      # Step 6: Commit and push GitHub Pages configuration changes
+      - name: Commit and Push Pages Configuration
+        run: |
+          # Check for any changes and commit them
+          git add docs/README.md docs/.nojekyll _config.yml docs/index.html 2>/dev/null || true
+          
+          # Commit if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update GitHub Pages configuration and symlinks"
+            git push origin main
+            echo "Successfully committed and pushed Pages configuration"
+          else
+            echo "No changes to commit for Pages configuration"
+          fi
+
+      # Step 7: Notification on failure
       - name: Sync Failure Notification
         if: failure()
         run: |
           echo "Error: Repository sync failed! There might be merge conflicts or permission issues."
+          echo "Please check the workflow logs for more details."
