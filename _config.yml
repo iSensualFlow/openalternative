@@ -1,0 +1,12 @@
+# _config.yml
+# GitHub Pages configuration 
+
+title: Awesome Open Source Alternatives
+description: Curated list of open source alternatives to proprietary software
+
+include:
+  - README.md
+
+exclude: []
+
+permalink: pretty
